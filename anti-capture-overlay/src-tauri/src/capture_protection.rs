@@ -7,8 +7,10 @@ pub fn set_anti_capture(window: &WebviewWindow) -> Result<(), String> {
         use windows_sys::Win32::UI::WindowsAndMessaging::{SetWindowDisplayAffinity, WDA_EXCLUDEFROMCAPTURE};
         use windows_sys::Win32::Foundation::HWND;
 
-        // Retrieve native window handle on Windows
-        let hwnd = window.hwnd().map_err(|e| e.to_string())? as HWND;
+        // Extract raw HWND pointer from Tauri's wrapper
+        let hwnd_wrapper = window.hwnd().map_err(|e| e.to_string())?;
+        let hwnd = hwnd_wrapper.0 as HWND;
+
         unsafe {
             // WDA_EXCLUDEFROMCAPTURE (0x00000011) completely hides the window from capture
             let success = SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);

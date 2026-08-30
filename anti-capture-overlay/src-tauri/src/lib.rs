@@ -1,6 +1,6 @@
 mod capture_protection;
 
-use tauri::{AppHandle, Manager, WebviewWindow};
+use tauri::{Manager, WebviewWindow};
 
 // Command to apply capture protection from the frontend
 #[tauri::command]

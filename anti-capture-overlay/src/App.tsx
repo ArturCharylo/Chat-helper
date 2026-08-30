@@ -9,7 +9,7 @@ import { streamChatCompletion } from './services/llm';
 export const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [apiKey] = useState(() => localStorage.getItem('openai_key') || '');
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('openai_key') || '');
 
   // Enable native capture exclusion on startup
   useEffect(() => {
@@ -18,10 +18,17 @@ export const App: React.FC = () => {
     });
   }, []);
 
-  const handleSendMessage = async (text: string) => {
-    if (!apiKey) {
-      alert('Please set your OpenAI API key in local storage (key: openai_key)');
-      return;
+const handleSendMessage = async (text: string) => {
+    let currentKey = apiKey;
+    
+    // Prompt for API key if missing
+    if (!currentKey) {
+      const inputKey = prompt('Enter your OpenAI API key:');
+      if (!inputKey || !inputKey.trim()) return;
+      
+      currentKey = inputKey.trim();
+      localStorage.setItem('openai_key', currentKey);
+      setApiKey(currentKey);
     }
 
     const userMessage: Message = { id: crypto.randomUUID(), role: 'user', content: text };
@@ -37,7 +44,7 @@ export const App: React.FC = () => {
         { id: assistantMessageId, role: 'assistant', content: '' },
       ]);
 
-      await streamChatCompletion([...messages, userMessage], apiKey, (chunk) => {
+      await streamChatCompletion([...messages, userMessage], currentKey, (chunk) => {
         accumulatedResponse += chunk;
         setMessages((prev) =>
           prev.map((msg) =>

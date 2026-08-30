@@ -1,26 +1,30 @@
 import { Message } from '../types/chat';
 
-// Streams responses from OpenAI-compatible endpoint
+// Streams responses from Groq OpenAI-compatible endpoint
 export async function streamChatCompletion(
   messages: Message[],
   apiKey: string,
   onChunk: (chunk: string) => void
 ): Promise<void> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey.trim()}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      // Fast, high-performance model hosted on Groq
+      model: 'openai/gpt-oss-120b',
       messages: messages.map(({ role, content }) => ({ role, content })),
       stream: true,
+      max_tokens: 4096,
     }),
   });
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.statusText}`);
+    const errorData = await response.json().catch(() => null);
+    const errorMessage = errorData?.error?.message || response.statusText;
+    throw new Error(`Groq API Error (${response.status}): ${errorMessage}`);
   }
 
   const reader = response.body?.getReader();
